@@ -26,11 +26,9 @@ static Shape objects[MAX_OBJECTS];
 static int objectCount = 0;
 
 void clearCanvas(void) {
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
+    for (int y = 0; y < HEIGHT; y++)
+        for (int x = 0; x < WIDTH; x++)
             canvas[y][x] = '_';
-        }
-    }
 }
 
 void paintPixel(int x, int y) {
@@ -62,10 +60,8 @@ void drawLineOnCanvas(int x1, int y1, int x2, int y2) {
 }
 
 void drawRectangleOnCanvas(int x1, int y1, int x2, int y2) {
-    int left = x1 < x2 ? x1 : x2;
-    int right = x1 < x2 ? x2 : x1;
-    int top = y1 < y2 ? y1 : y2;
-    int bottom = y1 < y2 ? y2 : y1;
+    int left = x1 < x2 ? x1 : x2, right = x1 < x2 ? x2 : x1;
+    int top = y1 < y2 ? y1 : y2, bottom = y1 < y2 ? y2 : y1;
 
     for (int x = left; x <= right; x++) {
         paintPixel(x, top);
@@ -135,9 +131,8 @@ void displayCanvas(void) {
     redrawCanvas();
     printf("\n");
     for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
+        for (int x = 0; x < WIDTH; x++)
             putchar(canvas[y][x]);
-        }
         putchar('\n');
     }
 }
@@ -181,7 +176,40 @@ int readInt(const char *prompt) {
         while (getchar() != '\n');
         printf("Invalid input. %s", prompt);
     }
+    while (getchar() != '\n');
     return value;
+}
+
+void readShapeParams(Shape *shape) {
+    switch (shape->type) {
+        case OBJ_RECTANGLE:
+            shape->x1 = readInt("Enter x1: ");
+            shape->y1 = readInt("Enter y1: ");
+            shape->x2 = readInt("Enter x2: ");
+            shape->y2 = readInt("Enter y2: ");
+            break;
+        case OBJ_CIRCLE:
+            shape->x1 = readInt("Enter center x: ");
+            shape->y1 = readInt("Enter center y: ");
+            shape->radius = readInt("Enter radius: ");
+            break;
+        case OBJ_LINE:
+            shape->x1 = readInt("Enter x1: ");
+            shape->y1 = readInt("Enter y1: ");
+            shape->x2 = readInt("Enter x2: ");
+            shape->y2 = readInt("Enter y2: ");
+            break;
+        case OBJ_TRIANGLE:
+            shape->x1 = readInt("Enter x1: ");
+            shape->y1 = readInt("Enter y1: ");
+            shape->x2 = readInt("Enter x2: ");
+            shape->y2 = readInt("Enter y2: ");
+            shape->x3 = readInt("Enter x3: ");
+            shape->y3 = readInt("Enter y3: ");
+            break;
+        default:
+            break;
+    }
 }
 
 void addObject(void) {
@@ -195,43 +223,17 @@ void addObject(void) {
     printf("  3. Line\n");
     printf("  4. Triangle\n");
     int choice = readInt("Enter choice: ");
-
-    Shape shape;
-    memset(&shape, 0, sizeof(shape));
-    switch (choice) {
-        case 1:
-            shape.type = OBJ_RECTANGLE;
-            shape.x1 = readInt("Enter x1: ");
-            shape.y1 = readInt("Enter y1: ");
-            shape.x2 = readInt("Enter x2: ");
-            shape.y2 = readInt("Enter y2: ");
-            break;
-        case 2:
-            shape.type = OBJ_CIRCLE;
-            shape.x1 = readInt("Enter center x: ");
-            shape.y1 = readInt("Enter center y: ");
-            shape.radius = readInt("Enter radius: ");
-            break;
-        case 3:
-            shape.type = OBJ_LINE;
-            shape.x1 = readInt("Enter x1: ");
-            shape.y1 = readInt("Enter y1: ");
-            shape.x2 = readInt("Enter x2: ");
-            shape.y2 = readInt("Enter y2: ");
-            break;
-        case 4:
-            shape.type = OBJ_TRIANGLE;
-            shape.x1 = readInt("Enter x1: ");
-            shape.y1 = readInt("Enter y1: ");
-            shape.x2 = readInt("Enter x2: ");
-            shape.y2 = readInt("Enter y2: ");
-            shape.x3 = readInt("Enter x3: ");
-            shape.y3 = readInt("Enter y3: ");
-            break;
-        default:
-            printf("Invalid type. Object was not added.\n");
-            return;
+    
+    if (choice < 1 || choice > 4) {
+        printf("Invalid type. Object was not added.\n");
+        return;
     }
+
+    Shape shape = {0};
+    static const ObjectType types[] = {OBJ_RECTANGLE, OBJ_CIRCLE, OBJ_LINE, OBJ_TRIANGLE};
+    shape.type = types[choice - 1];
+    
+    readShapeParams(&shape);
     objects[objectCount++] = shape;
     printf("Object added.\n");
 }
@@ -265,41 +267,7 @@ void modifyObject(void) {
         printf("Invalid object number.\n");
         return;
     }
-    Shape *shape = &objects[index];
-    switch (shape->type) {
-        case OBJ_RECTANGLE:
-            printf("Modify rectangle coordinates.\n");
-            shape->x1 = readInt("Enter x1: ");
-            shape->y1 = readInt("Enter y1: ");
-            shape->x2 = readInt("Enter x2: ");
-            shape->y2 = readInt("Enter y2: ");
-            break;
-        case OBJ_CIRCLE:
-            printf("Modify circle center and radius.\n");
-            shape->x1 = readInt("Enter center x: ");
-            shape->y1 = readInt("Enter center y: ");
-            shape->radius = readInt("Enter radius: ");
-            break;
-        case OBJ_LINE:
-            printf("Modify line endpoints.\n");
-            shape->x1 = readInt("Enter x1: ");
-            shape->y1 = readInt("Enter y1: ");
-            shape->x2 = readInt("Enter x2: ");
-            shape->y2 = readInt("Enter y2: ");
-            break;
-        case OBJ_TRIANGLE:
-            printf("Modify triangle points.\n");
-            shape->x1 = readInt("Enter x1: ");
-            shape->y1 = readInt("Enter y1: ");
-            shape->x2 = readInt("Enter x2: ");
-            shape->y2 = readInt("Enter y2: ");
-            shape->x3 = readInt("Enter x3: ");
-            shape->y3 = readInt("Enter y3: ");
-            break;
-        default:
-            printf("Unknown object type.\n");
-            return;
-    }
+    readShapeParams(&objects[index]);
     printf("Object modified.\n");
 }
 
