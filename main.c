@@ -281,7 +281,7 @@ void displayMenu(void) {
     printf("6. Clear all objects\n");
     printf("7. Exit\n");
 }
-
+//rikthasthaanaani puraiakaha. apnatime aayega hai. ekatepa rachapudi epateppa kotapati sepalleppa sathapathy//
 int main(void) {
     initializeDrawing();
     while (1) {
