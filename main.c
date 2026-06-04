@@ -8,36 +8,36 @@
 #define MAX_OBJECTS 100
 
 typedef enum {
-    OBJ_RECTANGLE,
-    OBJ_CIRCLE,
-    OBJ_LINE,
-    OBJ_TRIANGLE,
-    OBJ_NONE
-} ObjectType;
+    SHAPE_RECTANGLE,
+    SHAPE_CIRCLE,
+    SHAPE_LINE,
+    SHAPE_TRIANGLE,
+    SHAPE_NONE
+} ShapeType;
 
 typedef struct {
-    ObjectType type;
+    ShapeType type;
     int x1, y1, x2, y2, x3, y3;
     int radius;
 } Shape;
 
-static char canvas[HEIGHT][WIDTH];
-static Shape objects[MAX_OBJECTS];
-static int objectCount = 0;
+static char drawing[HEIGHT][WIDTH];
+static Shape shapes[MAX_OBJECTS];
+static int shapeCount = 0;
 
-void clearCanvas(void) {
+void initializeDrawing(void) {
     for (int y = 0; y < HEIGHT; y++)
         for (int x = 0; x < WIDTH; x++)
-            canvas[y][x] = '_';
+            drawing[y][x] = '_';
 }
 
-void paintPixel(int x, int y) {
+void setPixel(int x, int y) {
     if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
-        canvas[y][x] = '*';
+        drawing[y][x] = '*';
     }
 }
 
-void drawLineOnCanvas(int x1, int y1, int x2, int y2) {
+void renderLine(int x1, int y1, int x2, int y2) {
     int dx = abs(x2 - x1);
     int dy = abs(y2 - y1);
     int sx = x1 < x2 ? 1 : -1;
@@ -45,7 +45,7 @@ void drawLineOnCanvas(int x1, int y1, int x2, int y2) {
     int err = dx - dy;
 
     while (1) {
-        paintPixel(x1, y1);
+        setPixel(x1, y1);
         if (x1 == x2 && y1 == y2) break;
         int e2 = err * 2;
         if (e2 > -dy) {
@@ -59,34 +59,34 @@ void drawLineOnCanvas(int x1, int y1, int x2, int y2) {
     }
 }
 
-void drawRectangleOnCanvas(int x1, int y1, int x2, int y2) {
+void renderRect(int x1, int y1, int x2, int y2) {
     int left = x1 < x2 ? x1 : x2, right = x1 < x2 ? x2 : x1;
     int top = y1 < y2 ? y1 : y2, bottom = y1 < y2 ? y2 : y1;
 
     for (int x = left; x <= right; x++) {
-        paintPixel(x, top);
-        paintPixel(x, bottom);
+        setPixel(x, top);
+        setPixel(x, bottom);
     }
     for (int y = top; y <= bottom; y++) {
-        paintPixel(left, y);
-        paintPixel(right, y);
+        setPixel(left, y);
+        setPixel(right, y);
     }
 }
 
-void drawCircleOnCanvas(int cx, int cy, int radius) {
+void renderCircle(int cx, int cy, int radius) {
     int x = 0;
     int y = radius;
     int d = 3 - 2 * radius;
 
     while (x <= y) {
-        paintPixel(cx + x, cy + y);
-        paintPixel(cx - x, cy + y);
-        paintPixel(cx + x, cy - y);
-        paintPixel(cx - x, cy - y);
-        paintPixel(cx + y, cy + x);
-        paintPixel(cx - y, cy + x);
-        paintPixel(cx + y, cy - x);
-        paintPixel(cx - y, cy - x);
+        setPixel(cx + x, cy + y);
+        setPixel(cx - x, cy + y);
+        setPixel(cx + x, cy - y);
+        setPixel(cx - x, cy - y);
+        setPixel(cx + y, cy + x);
+        setPixel(cx - y, cy + x);
+        setPixel(cx + y, cy - x);
+        setPixel(cx - y, cy - x);
 
         if (d <= 0) {
             d += 4 * x + 6;
@@ -98,28 +98,28 @@ void drawCircleOnCanvas(int cx, int cy, int radius) {
     }
 }
 
-void drawTriangleOnCanvas(int x1, int y1, int x2, int y2, int x3, int y3) {
-    drawLineOnCanvas(x1, y1, x2, y2);
-    drawLineOnCanvas(x2, y2, x3, y3);
-    drawLineOnCanvas(x3, y3, x1, y1);
+void renderTriangle(int x1, int y1, int x2, int y2, int x3, int y3) {
+    renderLine(x1, y1, x2, y2);
+    renderLine(x2, y2, x3, y3);
+    renderLine(x3, y3, x1, y1);
 }
 
-void redrawCanvas(void) {
-    clearCanvas();
-    for (int i = 0; i < objectCount; i++) {
-        Shape *s = &objects[i];
+void refreshDrawing(void) {
+    initializeDrawing();
+    for (int i = 0; i < shapeCount; i++) {
+        Shape *s = &shapes[i];
         switch (s->type) {
-            case OBJ_RECTANGLE:
-                drawRectangleOnCanvas(s->x1, s->y1, s->x2, s->y2);
+            case SHAPE_RECTANGLE:
+                renderRect(s->x1, s->y1, s->x2, s->y2);
                 break;
-            case OBJ_CIRCLE:
-                drawCircleOnCanvas(s->x1, s->y1, s->radius);
+            case SHAPE_CIRCLE:
+                renderCircle(s->x1, s->y1, s->radius);
                 break;
-            case OBJ_LINE:
-                drawLineOnCanvas(s->x1, s->y1, s->x2, s->y2);
+            case SHAPE_LINE:
+                renderLine(s->x1, s->y1, s->x2, s->y2);
                 break;
-            case OBJ_TRIANGLE:
-                drawTriangleOnCanvas(s->x1, s->y1, s->x2, s->y2, s->x3, s->y3);
+            case SHAPE_TRIANGLE:
+                renderTriangle(s->x1, s->y1, s->x2, s->y2, s->x3, s->y3);
                 break;
             default:
                 break;
@@ -127,30 +127,30 @@ void redrawCanvas(void) {
     }
 }
 
-void displayCanvas(void) {
-    redrawCanvas();
+void showDrawing(void) {
+    refreshDrawing();
     printf("\n");
     for (int y = 0; y < HEIGHT; y++) {
         for (int x = 0; x < WIDTH; x++)
-            putchar(canvas[y][x]);
+            putchar(drawing[y][x]);
         putchar('\n');
     }
 }
 
-void printObject(int index) {
-    Shape *s = &objects[index];
+void describeShape(int index) {
+    Shape *s = &shapes[index];
     printf("[%d] ", index + 1);
     switch (s->type) {
-        case OBJ_RECTANGLE:
+        case SHAPE_RECTANGLE:
             printf("Rectangle: (%d,%d) to (%d,%d)\n", s->x1, s->y1, s->x2, s->y2);
             break;
-        case OBJ_CIRCLE:
+        case SHAPE_CIRCLE:
             printf("Circle: center (%d,%d), radius %d\n", s->x1, s->y1, s->radius);
             break;
-        case OBJ_LINE:
+        case SHAPE_LINE:
             printf("Line: (%d,%d) to (%d,%d)\n", s->x1, s->y1, s->x2, s->y2);
             break;
-        case OBJ_TRIANGLE:
+        case SHAPE_TRIANGLE:
             printf("Triangle: (%d,%d), (%d,%d), (%d,%d)\n", s->x1, s->y1, s->x2, s->y2, s->x3, s->y3);
             break;
         default:
@@ -159,17 +159,17 @@ void printObject(int index) {
     }
 }
 
-void listObjects(void) {
-    if (objectCount == 0) {
+void showAllShapes(void) {
+    if (shapeCount == 0) {
         printf("No objects in the picture.\n");
         return;
     }
-    for (int i = 0; i < objectCount; i++) {
-        printObject(i);
+    for (int i = 0; i < shapeCount; i++) {
+        describeShape(i);
     }
 }
 
-int readInt(const char *prompt) {
+int getInput(const char *prompt) {
     int value;
     printf("%s", prompt);
     while (scanf("%d", &value) != 1) {
@@ -180,40 +180,40 @@ int readInt(const char *prompt) {
     return value;
 }
 
-void readShapeParams(Shape *shape) {
+void inputShapeParameters(Shape *shape) {
     switch (shape->type) {
-        case OBJ_RECTANGLE:
-            shape->x1 = readInt("Enter x1: ");
-            shape->y1 = readInt("Enter y1: ");
-            shape->x2 = readInt("Enter x2: ");
-            shape->y2 = readInt("Enter y2: ");
+        case SHAPE_RECTANGLE:
+            shape->x1 = getInput("Enter x1: ");
+            shape->y1 = getInput("Enter y1: ");
+            shape->x2 = getInput("Enter x2: ");
+            shape->y2 = getInput("Enter y2: ");
             break;
-        case OBJ_CIRCLE:
-            shape->x1 = readInt("Enter center x: ");
-            shape->y1 = readInt("Enter center y: ");
-            shape->radius = readInt("Enter radius: ");
+        case SHAPE_CIRCLE:
+            shape->x1 = getInput("Enter center x: ");
+            shape->y1 = getInput("Enter center y: ");
+            shape->radius = getInput("Enter radius: ");
             break;
-        case OBJ_LINE:
-            shape->x1 = readInt("Enter x1: ");
-            shape->y1 = readInt("Enter y1: ");
-            shape->x2 = readInt("Enter x2: ");
-            shape->y2 = readInt("Enter y2: ");
+        case SHAPE_LINE:
+            shape->x1 = getInput("Enter x1: ");
+            shape->y1 = getInput("Enter y1: ");
+            shape->x2 = getInput("Enter x2: ");
+            shape->y2 = getInput("Enter y2: ");
             break;
-        case OBJ_TRIANGLE:
-            shape->x1 = readInt("Enter x1: ");
-            shape->y1 = readInt("Enter y1: ");
-            shape->x2 = readInt("Enter x2: ");
-            shape->y2 = readInt("Enter y2: ");
-            shape->x3 = readInt("Enter x3: ");
-            shape->y3 = readInt("Enter y3: ");
+        case SHAPE_TRIANGLE:
+            shape->x1 = getInput("Enter x1: ");
+            shape->y1 = getInput("Enter y1: ");
+            shape->x2 = getInput("Enter x2: ");
+            shape->y2 = getInput("Enter y2: ");
+            shape->x3 = getInput("Enter x3: ");
+            shape->y3 = getInput("Enter y3: ");
             break;
         default:
             break;
     }
 }
 
-void addObject(void) {
-    if (objectCount >= MAX_OBJECTS) {
+void addShape(void) {
+    if (shapeCount >= MAX_OBJECTS) {
         printf("Maximum object count reached.\n");
         return;
     }
@@ -222,7 +222,7 @@ void addObject(void) {
     printf("  2. Circle\n");
     printf("  3. Line\n");
     printf("  4. Triangle\n");
-    int choice = readInt("Enter choice: ");
+    int choice = getInput("Enter choice: ");
     
     if (choice < 1 || choice > 4) {
         printf("Invalid type. Object was not added.\n");
@@ -230,48 +230,48 @@ void addObject(void) {
     }
 
     Shape shape = {0};
-    static const ObjectType types[] = {OBJ_RECTANGLE, OBJ_CIRCLE, OBJ_LINE, OBJ_TRIANGLE};
+    static const ShapeType types[] = {SHAPE_RECTANGLE, SHAPE_CIRCLE, SHAPE_LINE, SHAPE_TRIANGLE};
     shape.type = types[choice - 1];
     
-    readShapeParams(&shape);
-    objects[objectCount++] = shape;
+    inputShapeParameters(&shape);
+    shapes[shapeCount++] = shape;
     printf("Object added.\n");
 }
 
-void deleteObject(void) {
-    if (objectCount == 0) {
+void removeShape(void) {
+    if (shapeCount == 0) {
         printf("No objects to delete.\n");
         return;
     }
-    listObjects();
-    int index = readInt("Enter object number to delete: ") - 1;
-    if (index < 0 || index >= objectCount) {
+    showAllShapes();
+    int index = getInput("Enter object number to delete: ") - 1;
+    if (index < 0 || index >= shapeCount) {
         printf("Invalid object number.\n");
         return;
     }
-    for (int i = index; i < objectCount - 1; i++) {
-        objects[i] = objects[i + 1];
+    for (int i = index; i < shapeCount - 1; i++) {
+        shapes[i] = shapes[i + 1];
     }
-    objectCount--;
+    shapeCount--;
     printf("Object deleted.\n");
 }
 
-void modifyObject(void) {
-    if (objectCount == 0) {
+void editShape(void) {
+    if (shapeCount == 0) {
         printf("No objects to modify.\n");
         return;
     }
-    listObjects();
-    int index = readInt("Enter object number to modify: ") - 1;
-    if (index < 0 || index >= objectCount) {
+    showAllShapes();
+    int index = getInput("Enter object number to modify: ") - 1;
+    if (index < 0 || index >= shapeCount) {
         printf("Invalid object number.\n");
         return;
     }
-    readShapeParams(&objects[index]);
+    inputShapeParameters(&shapes[index]);
     printf("Object modified.\n");
 }
 
-void showMenu(void) {
+void displayMenu(void) {
     printf("\n2D Graphics Editor\n");
     printf("1. Display picture\n");
     printf("2. Add object\n");
@@ -283,29 +283,29 @@ void showMenu(void) {
 }
 
 int main(void) {
-    clearCanvas();
+    initializeDrawing();
     while (1) {
-        showMenu();
-        int choice = readInt("Enter option: ");
+        displayMenu();
+        int choice = getInput("Enter option: ");
         switch (choice) {
             case 1:
-                displayCanvas();
+                showDrawing();
                 break;
             case 2:
-                addObject();
+                addShape();
                 break;
             case 3:
-                deleteObject();
+                removeShape();
                 break;
             case 4:
-                modifyObject();
+                editShape();
                 break;
             case 5:
-                listObjects();
+                showAllShapes();
                 break;
             case 6:
-                objectCount = 0;
-                clearCanvas();
+                shapeCount = 0;
+                initializeDrawing();
                 printf("All objects cleared.\n");
                 break;
             case 7:
