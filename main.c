@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <string.h>
 
+// Simple 2D drawing app - lets you draw shapes on a canvas
 #define WIDTH 60
 #define HEIGHT 24
 #define MAX_OBJECTS 100
@@ -25,23 +25,25 @@ static char drawing[HEIGHT][WIDTH];
 static Shape shapes[MAX_OBJECTS];
 static int shapeCount = 0;
 
+// Clear the canvas and fill with empty space
 void initializeDrawing(void) {
     for (int y = 0; y < HEIGHT; y++)
         for (int x = 0; x < WIDTH; x++)
             drawing[y][x] = '_';
 }
 
+// Draw a single pixel at (x,y) if it's within bounds
 void setPixel(int x, int y) {
-    if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
+    if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT)
         drawing[y][x] = '*';
-    }
 }
 
+// Draw a line from (x1,y1) to (x2,y2) using Bresenham's algorithm
 void renderLine(int x1, int y1, int x2, int y2) {
     int dx = abs(x2 - x1);
     int dy = abs(y2 - y1);
-    int sx = x1 < x2 ? 1 : -1;
-    int sy = y1 < y2 ? 1 : -1;
+    int sx = (x1 < x2) ? 1 : -1;
+    int sy = (y1 < y2) ? 1 : -1;
     int err = dx - dy;
 
     while (1) {
@@ -59,20 +61,22 @@ void renderLine(int x1, int y1, int x2, int y2) {
     }
 }
 
+// Draw a rectangle outline between two points
 void renderRect(int x1, int y1, int x2, int y2) {
-    int left = x1 < x2 ? x1 : x2, right = x1 < x2 ? x2 : x1;
-    int top = y1 < y2 ? y1 : y2, bottom = y1 < y2 ? y2 : y1;
+    int left = (x1 < x2) ? x1 : x2;
+    int right = (x1 < x2) ? x2 : x1;
+    int top = (y1 < y2) ? y1 : y2;
+    int bottom = (y1 < y2) ? y2 : y1;
 
-    for (int x = left; x <= right; x++) {
-        setPixel(x, top);
-        setPixel(x, bottom);
-    }
-    for (int y = top; y <= bottom; y++) {
-        setPixel(left, y);
-        setPixel(right, y);
-    }
+    // Draw top and bottom edges
+    for (int x = left; x <= right; x++)
+        setPixel(x, top), setPixel(x, bottom);
+    // Draw left and right edges
+    for (int y = top; y <= bottom; y++)
+        setPixel(left, y), setPixel(right, y);
 }
 
+// Draw a circle using midpoint algorithm
 void renderCircle(int cx, int cy, int radius) {
     int x = 0;
     int y = radius;
@@ -98,16 +102,19 @@ void renderCircle(int cx, int cy, int radius) {
     }
 }
 
+// Draw a triangle by connecting three points
 void renderTriangle(int x1, int y1, int x2, int y2, int x3, int y3) {
     renderLine(x1, y1, x2, y2);
     renderLine(x2, y2, x3, y3);
     renderLine(x3, y3, x1, y1);
 }
 
+// Redraw everything from scratch
 void refreshDrawing(void) {
     initializeDrawing();
     for (int i = 0; i < shapeCount; i++) {
         Shape *s = &shapes[i];
+        // Render each shape based on its type
         switch (s->type) {
             case SHAPE_RECTANGLE:
                 renderRect(s->x1, s->y1, s->x2, s->y2);
@@ -127,6 +134,7 @@ void refreshDrawing(void) {
     }
 }
 
+// Display the canvas on screen
 void showDrawing(void) {
     refreshDrawing();
     printf("\n");
@@ -137,6 +145,7 @@ void showDrawing(void) {
     }
 }
 
+// Print details about a single shape
 void describeShape(int index) {
     Shape *s = &shapes[index];
     printf("[%d] ", index + 1);
@@ -159,16 +168,17 @@ void describeShape(int index) {
     }
 }
 
+// List all shapes in the drawing
 void showAllShapes(void) {
     if (shapeCount == 0) {
         printf("No objects in the picture.\n");
         return;
     }
-    for (int i = 0; i < shapeCount; i++) {
+    for (int i = 0; i < shapeCount; i++)
         describeShape(i);
-    }
 }
 
+// Get a valid integer from user
 int getInput(const char *prompt) {
     int value;
     printf("%s", prompt);
@@ -180,6 +190,7 @@ int getInput(const char *prompt) {
     return value;
 }
 
+// Ask user to enter coordinates/parameters for a shape
 void inputShapeParameters(Shape *shape) {
     switch (shape->type) {
         case SHAPE_RECTANGLE:
@@ -212,6 +223,7 @@ void inputShapeParameters(Shape *shape) {
     }
 }
 
+// Add a new shape to the drawing
 void addShape(void) {
     if (shapeCount >= MAX_OBJECTS) {
         printf("Maximum object count reached.\n");
@@ -238,6 +250,7 @@ void addShape(void) {
     printf("Object added.\n");
 }
 
+// Delete a shape from the drawing
 void removeShape(void) {
     if (shapeCount == 0) {
         printf("No objects to delete.\n");
@@ -249,13 +262,14 @@ void removeShape(void) {
         printf("Invalid object number.\n");
         return;
     }
-    for (int i = index; i < shapeCount - 1; i++) {
+    // Shift remaining shapes down
+    for (int i = index; i < shapeCount - 1; i++)
         shapes[i] = shapes[i + 1];
-    }
     shapeCount--;
     printf("Object deleted.\n");
 }
 
+// Change a shape's coordinates
 void editShape(void) {
     if (shapeCount == 0) {
         printf("No objects to modify.\n");
@@ -271,6 +285,7 @@ void editShape(void) {
     printf("Object modified.\n");
 }
 
+// Show the main menu
 void displayMenu(void) {
     printf("\n2D Graphics Editor\n");
     printf("1. Display picture\n");
@@ -281,12 +296,14 @@ void displayMenu(void) {
     printf("6. Clear all objects\n");
     printf("7. Exit\n");
 }
-//rikthasthaanaani puraiakaha. apnatime aayega hai. ekatepa rachapudi epateppa kotapati sepalleppa sathapathy//
+
+// Main program loop
 int main(void) {
     initializeDrawing();
     while (1) {
         displayMenu();
         int choice = getInput("Enter option: ");
+        // Handle user's menu choice
         switch (choice) {
             case 1:
                 showDrawing();
